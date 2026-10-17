@@ -78,16 +78,33 @@ def startup():
         scheduler.start()
 
 scheduler=BackgroundScheduler()
-
+last_poll_at = None
 def poll():
+    global last_poll_at
+    last_poll_at = datetime.now(timezone.utc).isoformat()
     with connect() as c:
-        rows=c.execute("SELECT id FROM parcels WHERE status NOT IN ('delivered','cancelled') ORDER BY COALESCE(last_checked,'') LIMIT ?",(int(os.getenv('POLL_BATCH_SIZE','25')),)).fetchall()
+        rows = c.execute(
+            "SELECT id FROM parcels WHERE status NOT IN ('delivered','cancelled') ORDER BY COALESCE(last_checked,'') LIMIT ?",
+            (int(os.getenv('POLL_BATCH_SIZE', '25')),)
+        ).fetchall()
     for r in rows:
-        try:refresh_one(r['id'])
-        except Exception as exc:print('Refresh failed:',r['id'],type(exc).__name__)
+        try:
+            refresh_one(r['id'])
+        except Exception as exc:
+            print('Refresh failed:', r['id'], type(exc).__name__)
 
 @app.get('/health')
-def health():return {'ok':True,'provider_configured':bool(os.getenv('ETRACKINGS_API_KEY') and os.getenv('ETRACKINGS_KEY_SECRET') and os.getenv('ETRACKINGS_JNT_COURIER'))}
+def health():
+    return {
+        'ok': True,
+        'provider_configured': bool(
+            os.getenv('ETRACKINGS_API_KEY')
+            and os.getenv('ETRACKINGS_KEY_SECRET')
+            and os.getenv('ETRACKINGS_JNT_COURIER')
+        ),
+        'polling_enabled': scheduler.running,
+        'last_poll_at': last_poll_at
+    }
 
 @app.post('/accounts',dependencies=[Depends(auth)])
 def add_account(item:Account):
