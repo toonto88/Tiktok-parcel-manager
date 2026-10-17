@@ -150,3 +150,12 @@ async def import_csv(file:UploadFile=File(...)):
 # Serve the web interface from the same origin as the API.
 from fastapi.staticfiles import StaticFiles
 app.mount('/ui', StaticFiles(directory=os.path.join(os.path.dirname(__file__), 'static'), html=True), name='ui')
+
+from fastapi.responses import FileResponse
+
+@app.get("/tiktok3VmtIrD1ImX9OQuusCvtOc3UqEMIWlY2.txt")
+def tiktok_verification():
+    return FileResponse(
+        "static/tiktok3VmtIrD1ImX9OQuusCvtOc3UqEMIWlY2.txt",
+        media_type="text/plain"
+    )
