@@ -1,0 +1,22 @@
+name: Check Python Code
+
+on:
+  push:
+    branches:
+      - feature/reliable-polling-foundation
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check Python syntax
+        run: python -m py_compile app.py
